@@ -27,7 +27,7 @@ var client = s3.createClient({
 
 var callSlimer = function(elem){
 
-    var slimer = start_slimer_OSX + ' ' + ' \"' + elem.Url + '\"' + ' \"' + path.join(__dirname, elem.fileLink) + '\"';
+    var slimer = start_slimer + ' ' + ' \"' + elem.Url + '\"' + ' \"' + path.join(__dirname, elem.fileLink) + '\"';
     
     if(elem.type === 'web'){
         slimer += ' web';
@@ -41,9 +41,10 @@ var callSlimer = function(elem){
     });
 
     c.stdout.on('data', function(data){
-        // Change back to just data when slimerJS is updated
-        data = JSON.parse(data.trim());
-        if(data.finalRender){
+	// Change back to normal when slimer fixed the stdout problem
+        // data = JSON.parse(data);
+        // if(data.finalRender){
+	if(data){
             var params = {
                 localFile: path.join(__dirname, elem.fileLink),
              
