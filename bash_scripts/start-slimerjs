@@ -1,0 +1,13 @@
+#!/bin/bash
+if [[ -n "$1" && -n "$2" && -n "$3" ]]
+then
+ export DISPLAY=:99
+ if [[ -n "$4" ]]
+ then
+  slimerjs "$1" "$2" "$3" "$4"
+ else
+  slimerjs "$1" "$2" "$3"
+ fi
+else
+ echo "Usage: start-slimerjs scriptPath url fileLink (type)"
+fi
