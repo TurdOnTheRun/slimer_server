@@ -52,7 +52,7 @@ var openPage = function(url, fileLink, type) {
     var renderWebpage = function(finalRender, callback){
         renderSetup(function(height, width){
             page.render(fileLink, { format: 'png', quality: SHOT_QUALITY });
-            system.stdout.write(JSON.stringify({'finalRender': finalRender, 'height': height, 'width': width}));
+            console.log(JSON.stringify({'finalRender': finalRender, 'height': height, 'width': width}));
             if(typeof(callback) === typeof(Function)){
                 callback();
             }
@@ -79,7 +79,7 @@ var openPage = function(url, fileLink, type) {
         system.stderr.writeLine(msg);
     };
     page.onConsoleMessage = function(msg, lineNum, sourceId) {
-        system.stderr.writeLine( 'CONSOLE: ' + msg, lineNum, sourceId );
+        // system.stderr.writeLine( 'CONSOLE: ' + msg, lineNum, sourceId );
     };
 
     setFinalTimeout();
