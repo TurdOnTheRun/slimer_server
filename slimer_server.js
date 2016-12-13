@@ -41,6 +41,7 @@ var callSlimer = function(elem){
     });
 
     c.stdout.on('data', function(data){
+        // Change back to just data when slimerJS is updated
         data = JSON.parse(data.trim());
         if(data.finalRender){
             var params = {
