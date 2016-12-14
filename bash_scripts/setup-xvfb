@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # http://blog.jeffterrace.com/2012/07/xvfb-memory-leak-workaround.html
-nohup Xvfb :99 -screen 0 1024x768x24 -ac +render -noreset &
+nohup Xvfb :99 -screen 0 1366x828x24 -ac +render -noreset &
