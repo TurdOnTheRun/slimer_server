@@ -4,13 +4,13 @@ var fs = require('fs');
 
 var time = new Date();
 
-var openPage = function(url, fileLink, type) {
+var openPage = function(url, fileLink, type){
     var page = webpage.create();
     var firstShotTimeout;
     var finalTimeout;
 
     var FIRST_SHOT_TIME = 2200;
-    var FINAL_SHOT_TIME = 2200;
+    var FINAL_SHOT_TIME = 2400;
 
     var FILE_FORMAT = '.png';
 
@@ -37,7 +37,6 @@ var openPage = function(url, fileLink, type) {
             return [document.body.scrollHeight, document.body.scrollWidth];
         });
 
-        // console.log((new Date() - time)/1000);
 
         if(dimensions[0] < CLIP_HEIGHT){
             clipHeight = dimensions[0];
@@ -52,8 +51,7 @@ var openPage = function(url, fileLink, type) {
     var renderWebpage = function(finalRender, callback){
         renderSetup(function(height, width){
             page.render(fileLink, { format: 'png', quality: SHOT_QUALITY });
-            // Change back to system.stdout.write when slimerJS is updated
-            console.log(JSON.stringify({'finalRender': finalRender, 'height': height, 'width': width}));
+            system.stdout.write(JSON.stringify({ 'finalRender': finalRender, 'height': height, 'width': width }));
             if(typeof(callback) === typeof(Function)){
                 callback();
             }
@@ -76,15 +74,15 @@ var openPage = function(url, fileLink, type) {
 
     page.settings.resourceTimeout = 4000;
 
-    page.onError = function (msg) {
+    page.onError = function(msg){
         system.stderr.writeLine(msg);
     };
-    page.onConsoleMessage = function(msg, lineNum, sourceId) {
+    page.onConsoleMessage = function(msg, lineNum, sourceId){
         // system.stderr.writeLine( 'CONSOLE: ' + msg, lineNum, sourceId );
     };
 
     setFinalTimeout();
-    // setFirstShotTimeout();
+    //setFirstShotTimeout();
 
     page.open(url, function(status){
         if(status !== 'success'){
