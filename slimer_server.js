@@ -41,6 +41,11 @@ var callSlimer = function(elem){
     });
 
     c.stdout.on('data', function(data){
+        try{
+            data = JSON.parse(data);
+        } catch(e){
+            return;
+        }
         if(data.finalRender){
             var params = {
                 localFile: path.join(__dirname, elem.fileLink),
