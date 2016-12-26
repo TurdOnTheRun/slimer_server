@@ -37,7 +37,6 @@ var openPage = function(url, fileLink, type){
             return [document.body.scrollHeight, document.body.scrollWidth];
         });
 
-
         if(dimensions[0] < CLIP_HEIGHT){
             clipHeight = dimensions[0];
         }
