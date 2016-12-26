@@ -6,5 +6,5 @@ then
  nohup node /home/ubuntu/slimer_server/slimer_server.js "$1" "$2" &
  echo -en "\n\n"
 else
- echo "Usage: setup-slimer-server host path"
+ echo "Usage: setup-slimer-server host port"
 fi
