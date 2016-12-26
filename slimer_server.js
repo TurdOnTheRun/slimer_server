@@ -41,10 +41,7 @@ var callSlimer = function(elem){
     });
 
     c.stdout.on('data', function(data){
-	// Change back to normal when slimer fixed the stdout problem
-        // data = JSON.parse(data);
-        // if(data.finalRender){
-	if(data){
+        if(data.finalRender){
             var params = {
                 localFile: path.join(__dirname, elem.fileLink),
              

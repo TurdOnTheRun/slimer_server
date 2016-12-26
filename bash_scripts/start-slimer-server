@@ -1,0 +1,10 @@
+#!/bin/bash
+if [[ -n "$1" && -n "$2" ]]
+then
+ setup-xvfb
+ echo -en "\n\n"
+ nohup node /home/ubuntu/slimer_server/slimer_server.js "$1" "$2" &
+ echo -en "\n\n"
+else
+ echo "Usage: setup-slimer-server host path"
+fi
