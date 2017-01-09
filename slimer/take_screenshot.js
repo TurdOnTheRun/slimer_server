@@ -1,34 +1,46 @@
 var webpage = require('webpage');
+var page = webpage.create();
+var webserver = require("webserver").create();
 var system = require('system');
-var fs = require('fs');
 
-var time = new Date();
+var SLIMER_SERVER_ADDRESS = 'localhost:8083';
 
-var openPage = function(url, fileLink, type){
-    var page = webpage.create();
-    var firstShotTimeout;
-    var finalTimeout;
+var SHOT_QUALITY = 0;
+var FIRST_SHOT_TIME = 2200;
+var FINAL_SHOT_TIME = 2500;
 
-    var FIRST_SHOT_TIME = 2200;
-    var FINAL_SHOT_TIME = 2400;
+var MOBILE_SETTINGS = {
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_4 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10B350 Safari/8536.25',
+    width: 295,
+    height: 597,
+    clipHeight: 1500
+};
 
-    var FILE_FORMAT = '.png';
+var WEB_SETTINGS = {
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:10.0) Gecko/20100101 Firefox/50.0',
+    width: 1366,
+    height: 828,
+    clipHeight: 1500
+};
 
-    page.settings.userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_1_4 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10B350 Safari/8536.25';
-    var BROWSER_WIDTH = 295;
-    var BROWSER_HEIGHT = 597;
-    var CLIP_HEIGHT = 1500;
-    var SHOT_QUALITY = 50;
+var SETTINGS;
+var ready = true;
 
-    if(type && type === 'web'){
-        page.settings.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:10.0) Gecko/20100101 Firefox/46.0';
-        BROWSER_WIDTH = 1366;
-        BROWSER_HEIGHT = 828;
-        CLIP_HEIGHT = 1500;
-    }
+var firstShotTimeout;
+var finalTimeout;
+
+page.settings.resourceTimeout = 4000;
+page.onError = function(msg){
+    // system.stderr.writeLine(msg);
+};
+page.onConsoleMessage = function(msg, lineNum, sourceId){
+    // system.stderr.writeLine( 'CONSOLE: ' + msg, lineNum, sourceId );
+};
+
+var getScreenshot = function(req, res){
 
     var renderSetup = function(callback){
-        var clipHeight = CLIP_HEIGHT;
+        var clipHeight = SETTINGS.clipHeight;
         page.scrollPosition = {
             top: 0,
             left: 0
@@ -36,54 +48,54 @@ var openPage = function(url, fileLink, type){
         var dimensions = page.evaluate(function(){
             return [document.body.scrollHeight, document.body.scrollWidth];
         });
-
-        if(dimensions[0] < CLIP_HEIGHT){
+        if(dimensions[0] < clipHeight){
             clipHeight = dimensions[0];
         }
         page.clipRect = { top: 0, left: 0, width: dimensions[1], height: clipHeight };
-
         if(typeof(callback) === typeof(Function)){
             callback(clipHeight, dimensions[1]);
         }
     };
-
+    
     var renderWebpage = function(finalRender, callback){
         renderSetup(function(height, width){
-            page.render(fileLink, { format: 'png', quality: SHOT_QUALITY });
-            system.stdout.write(JSON.stringify({ 'finalRender': finalRender, 'height': height, 'width': width }));
+            page.render(req.data.fileLink, { format: 'png', quality: SHOT_QUALITY });
+            res.write(JSON.stringify({ 'finalRender': finalRender, 'height': height, 'width': width }));
+            res.close();
             if(typeof(callback) === typeof(Function)){
                 callback();
             }
         });
     };
-
+    
     var setFirstShotTimeout = function(){
         firstShotTimeout = setTimeout(function(){
             renderWebpage(false);
         }, FIRST_SHOT_TIME);
     };
-
+    
     var setFinalTimeout = function(){
         finalTimeout = setTimeout(function(){
-            renderWebpage(true, function(){ slimer.exit(); });
+            renderWebpage(true, function(){
+                page.close();
+                ready = true;
+            });
         }, FINAL_SHOT_TIME);
     };
 
-    page.viewportSize = { width: BROWSER_WIDTH, height: BROWSER_HEIGHT };
+    if(req.data.type && req.data.type === 'web'){
+        SETTINGS = WEB_SETTINGS;
+    }
+    else{
+        SETTINGS = MOBILE_SETTINGS;
+    }
 
-    page.settings.resourceTimeout = 4000;
-
-    page.onError = function(msg){
-        system.stderr.writeLine(msg);
-    };
-    page.onConsoleMessage = function(msg, lineNum, sourceId){
-        // system.stderr.writeLine( 'CONSOLE: ' + msg, lineNum, sourceId );
-    };
-
+    page.settings.userAgent = SETTINGS.userAgent;
+    page.viewportSize = { width: SETTINGS.width, height: SETTINGS.height };
     setFinalTimeout();
-    //setFirstShotTimeout();
+    // setFirstShotTimeout();
 
-    page.open(url, function(status){
+    page.open(req.data.url, function(status){
         if(status !== 'success'){
             //__ERROR__
             slimer.exit(1);
@@ -97,10 +109,27 @@ var openPage = function(url, fileLink, type){
     });
 };
 
-if(system.args.length < 3){
-    system.stderr.write("Failed to run render_webpage_mobile.js\nUsage: slimerjs render_webpage_mobile.js url fileLink (type)");
-    slimer.exit(1);
-}
-else{
-    openPage(system.args[1], system.args[2], system.args[3]);
-}
+webserver.listen(8083, function(req, res) {
+    if(req.headers.Host === SLIMER_SERVER_ADDRESS){
+        var data;
+        try{
+            data = JSON.parse(req.queryString);
+        }
+        catch(e){
+            res.close();
+            return;
+        }
+        if(data.isReadyCheck){
+            res.write(JSON.stringify({ isReady: ready }));
+            res.close();
+        }
+        else if(ready && data.url && data.fileLink){
+            ready = false;
+            req.data = data;
+            getScreenshot(req, res);
+        }
+    }
+    else{
+        req.close();
+    }
+});
